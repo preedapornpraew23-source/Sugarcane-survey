@@ -1,21 +1,23 @@
 <?php
 
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-
-$conn = new mysqli("localhost","root","","cane_survey");
+$conn = new mysqli("localhost","root","","sugarcane_db");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$name = $data['name'];
-$phone = $data['phone'];
-$address = $data['address'];
+$name = $data["name"];
 
-$sql = "INSERT INTO farmers(name,phone,address)
-VALUES('$name','$phone','$address')";
+$sql = "INSERT INTO farmers (name) VALUES ('$name')";
 
-$conn->query($sql);
+if ($conn->query($sql) === TRUE) {
 
-echo json_encode(["status"=>"success"]);
+    echo "บันทึกสำเร็จ";
+
+} else {
+
+    echo "Error: " . $conn->error;
+
+}
+
+$conn->close();
 
 ?>
