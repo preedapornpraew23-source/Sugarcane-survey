@@ -65,18 +65,18 @@
         <label class="inline"><input type="radio" name="knowledge1" value="no"> ไม่ทราบ</label>
 
         <label>อาการที่พบ</label>
-        <label><input type="checkbox" name="symptom" value="white"> ใบสีขาวทั้งใบ</label>
-        <label><input type="checkbox" name="symptom" value="stripe"> ใบขาวเป็นแถบ</label>
-        <label><input type="checkbox" name="symptom" value="small"> ลำเล็ก แตกกอ</label>
-        <label><input type="checkbox" name="symptom" value="dead"> ตายยกกอ</label>
+        <label><input type="checkbox" name="symptom[]" value="white"> ใบสีขาวทั้งใบ</label>
+        <label><input type="checkbox" name="symptom[]" value="stripe"> ใบขาวเป็นแถบ</label>
+        <label><input type="checkbox" name="symptom[]" value="small"> ลำเล็ก แตกกอ</label>
+        <label><input type="checkbox" name="symptom[]" value="dead"> ตายยกกอ</label>
       </div>
 
       <div class="section">
         <h2>ส่วนที่ 4: การจัดการโรค</h2>
         <label>เมื่อพบโรคท่านจัดการอย่างไร</label>
-        <label><input type="checkbox" name="manage" value="destroy"> ถอนทำลายทันที</label>
-        <label><input type="checkbox" name="manage" value="harvest"> ปล่อยจนเก็บเกี่ยว</label>
-        <label><input type="checkbox" name="manage" value="partial"> ตัดทิ้งบางส่วน</label>
+        <label><input type="checkbox" name="manage[]" value="destroy"> ถอนทำลายทันที</label>
+        <label><input type="checkbox" name="manage[]" value="harvest"> ปล่อยจนเก็บเกี่ยว</label>
+        <label><input type="checkbox" name="manage[]" value="partial"> ตัดทิ้งบางส่วน</label>
 
         <label>มีการกำจัดเพลี้ยจักจั่นหรือไม่</label>
         <label class="inline"><input type="radio" name="insect" value="yes"> มี</label>
@@ -86,9 +86,9 @@
       <div class="section">
         <h2>ส่วนที่ 5: ความต้องการความช่วยเหลือ</h2>
         <label>ต้องการสนับสนุนด้านใด</label>
-        <label><input type="checkbox" name="support" value="seed"> พันธุ์อ้อยสะอาด</label>
-        <label><input type="checkbox" name="support" value="destroy"> วิธีทำลายต้นเป็นโรค</label>
-        <label><input type="checkbox" name="support" value="care"> วิธีบำรุงรักษาแปลง</label>
+        <label><input type="checkbox" name="support[]" value="seed"> พันธุ์อ้อยสะอาด</label>
+        <label><input type="checkbox" name="support[]" value="destroy"> วิธีทำลายต้นเป็นโรค</label>
+        <label><input type="checkbox" name="support[]" value="care"> วิธีบำรุงรักษาแปลง</label>
 
         <label>ข้อเสนอแนะเพิ่มเติม</label>
         <textarea name="suggestion"></textarea>
@@ -107,7 +107,7 @@ form.addEventListener('submit', async (e) => {
   const data = Object.fromEntries(formData.entries());
 
   try {
-    const res = await fetch('save.php', {
+    const res = await fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
