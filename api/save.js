@@ -24,11 +24,11 @@ export default async function handler(req, res) {
       : data["support[]"] || "";
 
     const connection = await mysql.createConnection({
-      host: "YOUR_HOST",
-      user: "YOUR_USER",
-      password: "YOUR_PASSWORD",
-      database: "sugarcane_db"
-    });
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+  });
 
     await connection.execute(
       `INSERT INTO survey
