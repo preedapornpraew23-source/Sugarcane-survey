@@ -154,25 +154,33 @@ document.getElementById("lon").value = position.coords.longitude
 
 function saveData(){
 
-let data={
+let data = {
 
-name:document.getElementById("name").value,
-address:document.getElementById("address").value,
-phone:document.getElementById("phone").value,
-lat:document.getElementById("lat").value,
-lon:document.getElementById("lon").value,
-area:document.getElementById("area").value,
-cane:document.getElementById("cane").value,
-yield:document.getElementById("yield").value,
-suggest:document.getElementById("suggest").value
+name: document.getElementById("name").value,
+phone: document.getElementById("phone").value,
+address: document.getElementById("address").value,
+lat: document.getElementById("lat").value,
+lon: document.getElementById("lon").value,
+area: document.getElementById("area").value,
+cane: document.getElementById("cane").value,
+yield: document.getElementById("yield").value,
+suggest: document.getElementById("suggest").value
 
-}
+};
 
-localStorage.setItem("caneSurvey",JSON.stringify(data))
+fetch("save.php",{
 
-alert("บันทึกข้อมูลเรียบร้อย")
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
 
-console.log(data)
+})
+.then(res=>res.json())
+.then(res=>{
+alert("บันทึกข้อมูลสำเร็จ")
+})
 
 }
 
