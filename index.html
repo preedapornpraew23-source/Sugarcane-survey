@@ -101,7 +101,7 @@ background:#388e3c;
 <input id="lon">
 
 <button class="gps" onclick="getLocation()">📍 บันทึกพิกัดอัตโนมัติ</button>
-<br><br>
+
 <label>พื้นที่ปลูกอ้อย (ไร่)</label>
 <input id="area">
 
@@ -154,33 +154,25 @@ document.getElementById("lon").value = position.coords.longitude
 
 function saveData(){
 
-let data = {
+let data={
 
-name: document.getElementById("name").value,
-phone: document.getElementById("phone").value,
-address: document.getElementById("address").value,
-lat: document.getElementById("lat").value,
-lon: document.getElementById("lon").value,
-area: document.getElementById("area").value,
-cane: document.getElementById("cane").value,
-yield: document.getElementById("yield").value,
-suggest: document.getElementById("suggest").value
+name:document.getElementById("name").value,
+address:document.getElementById("address").value,
+phone:document.getElementById("phone").value,
+lat:document.getElementById("lat").value,
+lon:document.getElementById("lon").value,
+area:document.getElementById("area").value,
+cane:document.getElementById("cane").value,
+yield:document.getElementById("yield").value,
+suggest:document.getElementById("suggest").value
 
-};
+}
 
-fetch("save",{
+localStorage.setItem("caneSurvey",JSON.stringify(data))
 
-method:"POST",
-headers:{
-"Content-Type":"api/js"
-},
-body:JSON.stringify(data)
+alert("บันทึกข้อมูลเรียบร้อย")
 
-})
-.then(res=>res.json())
-.then(res=>{
-alert("บันทึกข้อมูลสำเร็จ")
-})
+console.log(data)
 
 }
 

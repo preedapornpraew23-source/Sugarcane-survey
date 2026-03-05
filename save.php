@@ -1,23 +1,18 @@
 <?php
 
-include "db.php";
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+
+$conn = new mysqli("localhost","root","","cane_survey");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
 $name = $data['name'];
 $phone = $data['phone'];
 $address = $data['address'];
-$lat = $data['lat'];
-$lon = $data['lon'];
-$area = $data['area'];
-$cane = $data['cane'];
-$yield = $data['yield'];
-$suggest = $data['suggest'];
 
-$sql = "INSERT INTO farmers
-(name,phone,address,latitude,longitude,area,cane_variety,yield_per_rai,suggestion)
-VALUES
-('$name','$phone','$address','$lat','$lon','$area','$cane','$yield','$suggest')";
+$sql = "INSERT INTO farmers(name,phone,address)
+VALUES('$name','$phone','$address')";
 
 $conn->query($sql);
 
