@@ -24,10 +24,10 @@ export default async function handler(req, res) {
       : data["support[]"] || "";
 
     const connection = await mysql.createConnection({
-     host: "localhost",
-user: "root",
-password: "",
-database: "sugarcane_db"
+      host: "YOUR_HOST",
+      user: "YOUR_USER",
+      password: "YOUR_PASSWORD",
+      database: "sugarcane_db"
     });
 
     await connection.execute(
