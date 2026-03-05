@@ -104,7 +104,10 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const formData = new FormData(form);
-  const data = Object.fromEntries(formData.entries());
+  const data = Object.fromEntries(formData);
+data["symptom[]"] = formData.getAll("symptom[]");
+data["manage[]"] = formData.getAll("manage[]");
+data["support[]"] = formData.getAll("support[]");
 
   try {
     const res = await fetch('/api/save', {
