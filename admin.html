@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — แบบสำรวจแปลงอ้อย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Mitr:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #0f1a10; --surface: #1a2a1c; --surface2: #243326;
+    --green: #4a9954; --green-light: #76c442; --gold: #c8a828;
+    --gold-light: #f0d060; --text: #e8f5e9; --text-mid: #9dbfa0;
+    --text-dim: #5a7a5c; --border: #2d4a30; --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LOGIN */
+  .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: radial-gradient(ellipse at 50% 40%, rgba(74,153,84,0.12) 0%, transparent 70%); }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 48px 40px; width: 380px; text-align: center; box-shadow: var(--shadow); }
+  .login-icon { font-size: 52px; margin-bottom: 16px; }
+  .login-box h2 { font-family: 'Mitr', sans-serif; font-size: 1.4rem; color: var(--gold-light); margin-bottom: 6px; }
+  .login-box p { color: var(--text-mid); font-size: 0.9rem; margin-bottom: 28px; }
+  .login-input { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 1rem; outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
+  .login-input:focus { border-color: var(--green); }
+  .btn-login { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%); color: white; border: none; border-radius: 10px; font-family: 'Mitr', sans-serif; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
+  .btn-login:hover { opacity: 0.9; }
+  .login-error { color: #ff7070; font-size: 0.88rem; margin-top: 10px; display: none; }
+
+  /* ADMIN LAYOUT */
+  .admin-wrap { display: none; flex-direction: column; min-height: 100vh; }
+  .admin-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .admin-header-left { display: flex; align-items: center; gap: 14px; }
+  .admin-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--green), var(--green-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .admin-title { font-family: 'Mitr', sans-serif; font-size: 1rem; color: var(--gold-light); }
+  .admin-subtitle { font-size: 0.78rem; color: var(--text-mid); }
+  .btn-logout { background: none; border: 1px solid var(--border); color: var(--text-mid); padding: 7px 16px; border-radius: 8px; font-family: 'Sarabun', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-logout:hover { border-color: var(--green); color: var(--green-light); }
+
+  .admin-body { display: flex; flex: 1; height: calc(100vh - 73px); }
+
+  /* SIDEBAR */
+  .sidebar { width: 340px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-top { padding: 16px; border-bottom: 1px solid var(--border); }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--surface2); border-radius: 10px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+  .stat-num { font-family: 'Mitr', sans-serif; font-size: 1.6rem; color: var(--gold-light); }
+  .stat-label { font-size: 0.75rem; color: var(--text-mid); }
+  .search-input { width: 100%; padding: 9px 14px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 0.9rem; outline: none; }
+  .search-input:focus { border-color: var(--green); }
+  .btn-export { width: 100%; margin-top: 10px; padding: 9px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--bg); border: none; border-radius: 8px; font-family: 'Mitr', sans-serif; font-size: 0.88rem; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+  .btn-export:hover { opacity: 0.85; }
+  .btn-refresh { width: 100%; margin-top: 8px; padding: 8px; background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); border-radius: 8px; font-family: 'Sarabun', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-refresh:hover { border-color: var(--green); color: var(--green-light); }
+
+  .survey-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .survey-list::-webkit-scrollbar { width: 4px; }
+  .survey-list::-webkit-scrollbar-track { background: transparent; }
+  .survey-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .survey-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.18s; }
+  .survey-item:hover { border-color: var(--green); background: rgba(74,153,84,0.08); }
+  .survey-item.active { border-color: var(--green-light); background: rgba(118,196,66,0.1); }
+  .si-name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+  .si-phone { font-size: 0.82rem; color: var(--text-mid); margin-top: 3px; }
+  .si-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .si-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; background: rgba(74,153,84,0.2); color: var(--green-light); }
+  .si-date { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+  .no-data { text-align: center; padding: 40px 20px; color: var(--text-dim); }
+
+  /* MAIN CONTENT */
+  .main-content { flex: 1; overflow-y: auto; padding: 24px; }
+  .main-content::-webkit-scrollbar { width: 4px; }
+  .main-content::-webkit-scrollbar-track { background: transparent; }
+  .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; color: var(--text-dim); }
+  .empty-state .icon { font-size: 64px; }
+  .empty-state p { font-family: 'Mitr', sans-serif; font-size: 1.1rem; }
+
+  /* DETAIL */
+  .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 16px; }
+  .detail-name { font-family: 'Mitr', sans-serif; font-size: 1.5rem; color: var(--gold-light); }
+  .detail-sub { color: var(--text-mid); font-size: 0.9rem; margin-top: 4px; }
+  .detail-date { font-size: 0.82rem; color: var(--text-dim); background: var(--surface2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap; }
+
+  .detail-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+  .ds-header { background: linear-gradient(90deg, var(--surface2) 0%, rgba(45,106,53,0.3) 100%); padding: 12px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .ds-num { width: 26px; height: 26px; background: var(--gold); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Mitr', sans-serif; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+  .ds-title { font-family: 'Mitr', sans-serif; font-size: 0.9rem; color: var(--gold-light); }
+  .ds-body { padding: 18px; }
+
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .info-item { }
+  .info-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 3px; }
+  .info-value { font-size: 0.92rem; color: var(--text); font-weight: 500; }
+  .info-value.empty { color: var(--text-dim); font-weight: 400; font-style: italic; }
+
+  .plot-detail { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .plot-detail:last-child { margin-bottom: 0; }
+  .pd-title { font-family: 'Mitr', sans-serif; font-size: 0.88rem; color: var(--green-light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .plot-map { width: 100%; height: 180px; border-radius: 8px; border: 1px solid var(--border); margin-top: 12px; }
+
+  /* Overview Map */
+  #overviewMap { width: 100%; height: 300px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; }
+
+  @media(max-width:768px) {
+    .admin-body { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; height: auto; }
+    .survey-list { max-height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-icon">🌿</div>
+    <h2>Admin Panel</h2>
+    <p>แบบสำรวจการบริหารจัดการแปลงอ้อย</p>
+    <input type="password" class="login-input" id="passwordInput" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-error" id="loginError">รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="adminWrap">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo">🌿</div>
+      <div>
+        <div class="admin-title">Admin Panel — แบบสำรวจแปลงอ้อย</div>
+        <div class="admin-subtitle">ศูนย์ส่งเสริมอุตสาหกรรมอ้อยและน้ำตาลทราย ภาคที่ 4</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+
+  <div class="admin-body">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">ทั้งหมด</div></div>
+          <div class="stat-card"><div class="stat-num" id="statToday">0</div><div class="stat-label">วันนี้</div></div>
+        </div>
+        <input class="search-input" type="text" placeholder="🔍 ค้นหาชื่อ / จังหวัด..." oninput="filterSurveys(this.value)">
+        <button class="btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
+        <button class="btn-refresh" onclick="loadSurveys()">🔄 โหลดใหม่</button>
+      </div>
+      <div class="survey-list" id="surveyList">
+        <div class="no-data">⏳ กำลังโหลด...</div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content" id="mainContent">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>เลือกรายการเพื่อดูรายละเอียด</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://eqswxsbpzuhxgftmfrfk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxc3d4c2JwenVoeGdmdG1mcmZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMzE2NjksImV4cCI6MjA4ODYwNzY2OX0.oFbLd-YBY6d3eVYHylfOJv1jAILAYKEZ-KVSvYRyneE';
+const ADMIN_PASSWORD = 'sugarcane2568'; // เปลี่ยนรหัสผ่านได้ที่นี่
+
+let allSurveys = [];
+let detailMaps = {};
+
+// ============ AUTH ============
+function doLogin() {
+  const pw = document.getElementById('passwordInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminWrap').style.display = 'flex';
+    loadSurveys();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminWrap').style.display = 'none';
+  document.getElementById('passwordInput').value = '';
+}
+
+// ============ LOAD DATA ============
+async function loadSurveys() {
+  document.getElementById('surveyList').innerHTML = '<div class="no-data">⏳ กำลังโหลด...</div>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/surveys?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    allSurveys = await res.json();
+    renderList(allSurveys);
+    updateStats(allSurveys);
+  } catch(e) {
+    document.getElementById('surveyList').innerHTML = '<div class="no-data">❌ โหลดข้อมูลไม่ได้</div>';
+  }
+}
+
+function updateStats(surveys) {
+  document.getElementById('statTotal').textContent = surveys.length;
+  const today = new Date().toDateString();
+  const todayCount = surveys.filter(s => new Date(s.created_at).toDateString() === today).length;
+  document.getElementById('statToday').textContent = todayCount;
+}
+
+function renderList(surveys) {
+  const list = document.getElementById('surveyList');
+  if (!surveys.length) { list.innerHTML = '<div class="no-data">📭 ไม่มีข้อมูล</div>'; return; }
+  list.innerHTML = surveys.map((s, i) => {
+    const d = s.data || {};
+    const date = new Date(s.created_at).toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const plotCount = (d.plots || []).length;
+    const province = s.province || d.province || '-';
+    return `<div class="survey-item" onclick="showDetail('${s.id}')" id="item-${s.id}">
+      <div class="si-name">${s.fullname || '(ไม่ระบุชื่อ)'}</div>
+      <div class="si-phone">📞 ${s.phone || '-'} | 📍 ${province}</div>
+      <div class="si-meta">
+        ${plotCount > 0 ? `<span class="si-badge">🌱 ${plotCount} แปลง</span>` : ''}
+        ${d.disease_level ? `<span class="si-badge">โรค: ${{'none':'ไม่พบ','low':'เล็กน้อย','mid':'ปานกลาง','high':'มาก'}[d.disease_level] || d.disease_level}</span>` : ''}
+      </div>
+      <div class="si-date">${date}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterSurveys(q) {
+  const filtered = allSurveys.filter(s =>
+    (s.fullname || '').includes(q) ||
+    (s.province || '').includes(q) ||
+    (s.phone || '').includes(q)
+  );
+  renderList(filtered);
+  updateStats(filtered);
+}
+
+// ============ DETAIL ============
+function showDetail(id) {
+  document.querySelectorAll('.survey-item').forEach(el => el.classList.remove('active'));
+  const itemEl = document.getElementById(`item-${id}`);
+  if (itemEl) itemEl.classList.add('active');
+
+  const s = allSurveys.find(x => x.id === id);
+  if (!s) return;
+  const d = s.data || {};
+  const date = new Date(s.created_at).toLocaleString('th-TH');
+  const plots = d.plots || [];
+
+  const yesno = v => v === 'yes' ? '✅ ใช่' : v === 'no' ? '❌ ไม่' : v || '-';
+  const val = v => v || '<span class="empty">ไม่ระบุ</span>';
+
+  const hasGPS = plots.some(p => p.latitude && p.longitude);
+
+  let overviewMapHtml = '';
+  if (hasGPS) {
+    overviewMapHtml = `<div id="overviewMap"></div>`;
+  }
+
+  let plotsHtml = plots.map((p, i) => {
+    const hasCoords = p.latitude && p.longitude;
+    return `<div class="plot-detail">
+      <div class="pd-title">🌱 แปลงที่ ${i+1}
+        ${hasCoords ? `<span style="font-size:0.75rem;color:var(--green-light)">📍 ${parseFloat(p.latitude).toFixed(5)}, ${parseFloat(p.longitude).toFixed(5)}</span>` : ''}
+      </div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">ที่ตั้ง</div><div class="info-value">${[p.moo?'หมู่'+p.moo:'',p.tambon,p.amphoe].filter(Boolean).join(' ') || '-'}</div></div>
+        <div class="info-item"><div class="info-label">เอกสารสิทธิ์</div><div class="info-value">${{'chanod':'โฉนด','ns3k':'นส.3ก','bpbt':'ภบท.5','none':'ไม่มี','other':'อื่นๆ'}[p.doc] || p.doc || '-'}</div></div>
+        <div class="info-item"><div class="info-label">พันธุ์หลัก</div><div class="info-value">${val(p.variety)}</div></div>
+        <div class="info-item"><div class="info-label">ผลผลิต (ตัน/ไร่)</div><div class="info-value">${val(p.yield_per_rai)}</div></div>
+        <div class="info-item"><div class="info-label">ลักษณะการปลูก</div><div class="info-value">${p.plant_type === 'new' ? 'อ้อยปลูก' : p.plant_type === 'ratoon' ? 'อ้อยตอ' : '-'}</div></div>
+        ${p.ratoon_no ? `<div class="info-item"><div class="info-label">จำนวนตอ</div><div class="info-value">${p.ratoon_no} ตอ</div></div>` : ''}
+      </div>
+      ${hasCoords ? `<div id="pmap-${id}-${i}" class="plot-map"></div>` : ''}
+    </div>`;
+  }).join('') || '<p style="color:var(--text-dim)">ไม่มีข้อมูลแปลง</p>';
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-name">${s.fullname || '(ไม่ระบุชื่อ)'}</div>
+        <div class="detail-sub">📞 ${s.phone || '-'} &nbsp;|&nbsp; 📍 ${[d.tambon,d.amphoe,s.province].filter(Boolean).join(', ') || '-'}</div>
+      </div>
+      <div class="detail-date">🕐 ${date}</div>
+    </div>
+
+    ${overviewMapHtml}
+
+    <div class="detail-section">
+      <div class="ds-header"><div class="ds-num">1</div><div class="ds-title">ข้อมูลทั่วไป</div></div>
+      <div class="ds-body"><div class="info-grid">
+        <div class="info-item"><div class="info-label">บ้านเลขที่</div><div class="info-value">${val(d.house_no)}</div></div>
+        <div class="info-item"><div class="info-label">หมู่ที่</div><div class="info-value">${val(d.moo)}</div></div>
+        <div class="info-item"><div class="info-label">ตำบล</div><div class="info-value">${val(d.tambon)}</div></div>
+        <div class="info-item"><div class="info-label">อำเภอ</div><div class="info-value">${val(d.amphoe)}</div></div>
+        <div class="info-item"><div class="info-label">จังหวัด</div><div class="info-value">${val(s.province)}</div></div>
+        <div class="info-item"><div class="info-label">ทะเบียนชาวไร่อ้อย</div><div class="info-value">${yesno(d.reg_farmer)} ${d.reg_farmer_no ? '#'+d.reg_farmer_no : ''}</div></div>
+        <div class="info-item"><div class="info-label">ทะเบียนเกษตรกร</div><div class="info-value">${yesno(d.reg_agri)} ${d.reg_agri_no ? '#'+d.reg_agri_no : ''}</div></div>
+        <div class="info-item"><div class="info-label">คู่สัญญาโรงงาน</div><div class="info-value">${yesno(d.factory_contract)} ${d.factory_name ? d.factory_name : ''}</div></div>
+        <div class="info-item"><div class="info-label">เขตส่งเสริม</div><div class="info-value">${val(d.zone)}</div></div>
+        <div class="info-item"><div class="info-label">การส่งอ้อย</div><div class="info-value">${{'yard':'ลานขนถ่าย','direct':'เข้าโรงงานตรง','private':'ลานเอกชน'}[d.delivery] || d.delivery || '-'}</div></div>
+      </div></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="ds-header"><div class="ds-num">2</div><div class="ds-title">พื้นที่ปลูกอ้อย (${plots.length} แปลง)</div></div>
+      <div class="ds-body">${plotsHtml}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="ds-header"><div class="ds-num">3</div><div class="ds-title">ความรู้เกี่ยวกับโรคใบขาว</div></div>
+      <div class="ds-body"><div class="info-grid">
+        <div class="info-item"><div class="info-label">รู้จักเชื้อไฟโตพลาสมา</div><div class="info-value">${yesno(d.know1)}</div></div>
+        <div class="info-item"><div class="info-label">รู้การแพร่ระบาด</div><div class="info-value">${yesno(d.know2)}</div></div>
+        <div class="info-item"><div class="info-label">รู้ผลกระทบผลผลิต</div><div class="info-value">${yesno(d.know3)}</div></div>
+        <div class="info-item"><div class="info-label">รู้ผลกระทบค่าหวาน</div><div class="info-value">${yesno(d.know4)}</div></div>
+        <div class="info-item" style="grid-column: 1/-1"><div class="info-label">อาการที่พบ</div><div class="info-value">${Array.isArray(d.symptom) ? d.symptom.join(', ') : (d.symptom || '-')} ${d.symptom_other ? '| '+d.symptom_other : ''}</div></div>
+      </div></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="ds-header"><div class="ds-num">4</div><div class="ds-title">การจัดการโรค</div></div>
+      <div class="ds-body"><div class="info-grid">
+        <div class="info-item"><div class="info-label">แหล่งที่เกิดโรค</div><div class="info-value">${d.disease_from === 'new' ? 'อ้อยปลูก' : d.disease_from === 'ratoon' ? 'อ้อยตอ' : '-'} ${d.disease_ratoon ? 'ตอ '+d.disease_ratoon : ''}</div></div>
+        <div class="info-item"><div class="info-label">คัดเลือกพันธุ์</div><div class="info-value">${{'certified':'แหล่งน่าเชื่อถือ','own':'แปลงตนเอง','hot_water':'แช่น้ำร้อน'}[d.seed_select] || '-'}</div></div>
+        <div class="info-item"><div class="info-label">การจัดการเมื่อพบโรค</div><div class="info-value">${{'destroy':'ทำลายทันที','leave':'ปล่อยไว้','partial':'ตัดบางส่วน'}[d.manage] || '-'} ${d.manage_method ? '('+d.manage_method+')' : ''}</div></div>
+        <div class="info-item"><div class="info-label">วิธีเก็บเกี่ยว</div><div class="info-value">${d.harvest === 'machine' ? 'รถตัด' : d.harvest === 'burn' ? 'เผาก่อน' : '-'}</div></div>
+        <div class="info-item"><div class="info-label">กำจัดพาหะ</div><div class="info-value">${yesno(d.pest_control)} ${d.pest_method ? '('+d.pest_method+')' : ''}</div></div>
+        <div class="info-item"><div class="info-label">ระดับการพบโรค</div><div class="info-value">${{'none':'ไม่พบ','low':'เล็กน้อย','mid':'ปานกลาง','high':'มาก'}[d.disease_level] || '-'}</div></div>
+        <div class="info-item"><div class="info-label">ตรวจโรคในแปลง</div><div class="info-value">${yesno(d.check_service)}</div></div>
+        <div class="info-item"><div class="info-label">ตรวจวิเคราะห์ดิน</div><div class="info-value">${yesno(d.soil_test)}</div></div>
+      </div></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="ds-header"><div class="ds-num">5</div><div class="ds-title">ความต้องการช่วยเหลือ</div></div>
+      <div class="ds-body"><div class="info-grid">
+        <div class="info-item"><div class="info-label">ประกาศภัยพิบัติ</div><div class="info-value">${yesno(d.disaster_declare)}</div></div>
+        <div class="info-item"><div class="info-label">ร่วมมือจดทะเบียน</div><div class="info-value">${yesno(d.cooperate_reg)} ${d.cooperate_reason ? '('+d.cooperate_reason+')' : ''}</div></div>
+        <div class="info-item"><div class="info-label">ต้องการองค์ความรู้</div><div class="info-value">${yesno(d.need_knowledge)} ${d.knowledge_detail ? '('+d.knowledge_detail+')' : ''}</div></div>
+        <div class="info-item"><div class="info-label">ต้องการสนับสนุน</div><div class="info-value">${Array.isArray(d.support) ? d.support.join(', ') : (d.support || '-')}</div></div>
+        <div class="info-item"><div class="info-label">ร่วมมือผู้เชี่ยวชาญ</div><div class="info-value">${yesno(d.expert_cooperate)}</div></div>
+        ${d.other_needs ? `<div class="info-item" style="grid-column:1/-1"><div class="info-label">ความต้องการอื่นๆ</div><div class="info-value">${d.other_needs}</div></div>` : ''}
+      </div></div>
+    </div>
+  `;
+
+  // Init maps after render
+  setTimeout(() => {
+    // Overview map
+    if (hasGPS) {
+      const validPlots = plots.filter(p => p.latitude && p.longitude);
+      const overviewMap = L.map('overviewMap');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(overviewMap);
+      const bounds = [];
+      validPlots.forEach((p, i) => {
+        const lat = parseFloat(p.latitude), lng = parseFloat(p.longitude);
+        bounds.push([lat, lng]);
+        L.marker([lat, lng]).addTo(overviewMap)
+          .bindPopup(`🌱 แปลงที่ ${i+1}<br>${[p.tambon,p.amphoe].filter(Boolean).join(', ')}`);
+      });
+      if (bounds.length === 1) overviewMap.setView(bounds[0], 15);
+      else overviewMap.fitBounds(bounds, { padding: [30,30] });
+    }
+    // Per-plot maps
+    plots.forEach((p, i) => {
+      if (!p.latitude || !p.longitude) return;
+      const el = document.getElementById(`pmap-${id}-${i}`);
+      if (!el) return;
+      const lat = parseFloat(p.latitude), lng = parseFloat(p.longitude);
+      const m = L.map(el).setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(m);
+      L.marker([lat, lng]).addTo(m).bindPopup(`แปลงที่ ${i+1}`).openPopup();
+    });
+  }, 200);
+}
+
+// ============ EXPORT CSV ============
+function exportCSV() {
+  if (!allSurveys.length) { alert('ไม่มีข้อมูล'); return; }
+  const headers = ['วันที่','ชื่อ-สกุล','เบอร์โทร','จังหวัด','อำเภอ','ตำบล','พื้นที่รวม(ไร่)','จำนวนแปลง','ระดับโรค','ประกาศภัยพิบัติ'];
+  const rows = allSurveys.map(s => {
+    const d = s.data || {};
+    return [
+      new Date(s.created_at).toLocaleDateString('th-TH'),
+      s.fullname || '',
+      s.phone || '',
+      s.province || '',
+      d.amphoe || '',
+      d.tambon || '',
+      d.total_area || '',
+      (d.plots || []).length,
+      {'none':'ไม่พบ','low':'เล็กน้อย','mid':'ปานกลาง','high':'มาก'}[d.disease_level] || '',
+      d.disaster_declare === 'yes' ? 'ต้องการ' : 'ไม่ต้องการ'
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `survey_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบสำรวจการบริหารจัดการแปลงอ้อย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Mitr:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --green-dark: #1a3a1f; --green-mid: #2d6a35; --green-light: #4a9954;
+    --green-pale: #e8f5e9; --gold: #c8a828; --gold-light: #f0d060;
+    --cream: #faf8f0; --text-dark: #1a2a1c; --text-mid: #3d5c40;
+    --text-light: #6b8f6e; --border: #c5dfc7; --white: #ffffff;
+    --shadow: 0 4px 24px rgba(26,58,31,0.10); --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; background-image: radial-gradient(ellipse at 80% 0%, rgba(118,196,66,0.10) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(45,106,53,0.08) 0%, transparent 50%); }
+  header { background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 60%, var(--green-light) 100%); color: white; position: relative; overflow: hidden; }
+  header::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q35 15 30 25 Q25 15 30 5Z M30 35 Q35 45 30 55 Q25 45 30 35Z M5 30 Q15 25 25 30 Q15 35 5 30Z M35 30 Q45 25 55 30 Q45 35 35 30Z' fill='rgba(255,255,255,0.04)'/%3E%3C/svg%3E"); background-size: 60px 60px; }
+  .header-inner { max-width: 860px; margin: 0 auto; padding: 40px 24px 32px; position: relative; z-index: 1; display: flex; align-items: center; gap: 24px; }
+  .header-icon { width: 72px; height: 72px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.25); }
+  .header-text h1 { font-family: 'Mitr', sans-serif; font-size: clamp(1.2rem, 3vw, 1.7rem); font-weight: 600; line-height: 1.3; }
+  .header-text p { margin-top: 6px; font-size: 0.95rem; opacity: 0.8; font-weight: 300; }
+  .gold-bar { height: 4px; background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%); }
+  .container { max-width: 860px; margin: 0 auto; padding: 32px 16px 60px; }
+  .section-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 28px; overflow: hidden; border: 1px solid var(--border); animation: fadeUp 0.4s ease both; }
+  .section-card:nth-child(1){animation-delay:.05s}.section-card:nth-child(2){animation-delay:.1s}.section-card:nth-child(3){animation-delay:.15s}.section-card:nth-child(4){animation-delay:.2s}.section-card:nth-child(5){animation-delay:.25s}
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  .section-header { background: linear-gradient(90deg, var(--green-dark) 0%, var(--green-mid) 100%); color: white; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  .section-num { width: 32px; height: 32px; background: var(--gold); color: var(--green-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Mitr', sans-serif; font-weight: 600; font-size: 0.9rem; flex-shrink: 0; }
+  .section-title { font-family: 'Mitr', sans-serif; font-size: 1rem; font-weight: 500; }
+  .section-body { padding: 24px; }
+  .field-group { margin-bottom: 20px; }
+  .field-group:last-child { margin-bottom: 0; }
+  label.field-label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-mid); margin-bottom: 7px; }
+  label.field-label .req { color: #e05050; margin-left: 3px; }
+  input[type="text"], input[type="tel"], input[type="number"], textarea, select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Sarabun', sans-serif; font-size: 0.95rem; color: var(--text-dark); background: var(--cream); transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--green-light); box-shadow: 0 0 0 3px rgba(74,153,84,0.15); background: white; }
+  textarea { resize: vertical; min-height: 80px; }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media(max-width:600px){ .input-row,.input-row-3{grid-template-columns:1fr} }
+  .radio-group, .check-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .radio-group.vertical, .check-group.vertical { flex-direction: column; gap: 8px; }
+  .radio-item, .check-item { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--cream); transition: all 0.18s; font-size: 0.9rem; user-select: none; }
+  .radio-item:hover, .check-item:hover { border-color: var(--green-light); background: var(--green-pale); }
+  .radio-item input[type="radio"], .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--green-mid); cursor: pointer; padding: 0; border: none; background: none; box-shadow: none; }
+  .radio-item:has(input:checked), .check-item:has(input:checked) { border-color: var(--green-light); background: var(--green-pale); font-weight: 600; color: var(--green-dark); }
+  .divider { border: none; border-top: 1.5px dashed var(--border); margin: 22px 0; }
+  .plot-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 18px; background: var(--green-pale); }
+  .plot-title { font-family: 'Mitr', sans-serif; font-size: 0.95rem; font-weight: 500; color: var(--green-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .plot-badge { background: var(--green-mid); color: white; border-radius: 6px; padding: 2px 10px; font-size: 0.82rem; }
+  .btn-add-plot { display: flex; align-items: center; gap: 8px; background: none; border: 2px dashed var(--green-light); border-radius: 10px; color: var(--green-mid); font-family: 'Sarabun', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 12px 20px; cursor: pointer; width: 100%; justify-content: center; transition: all 0.18s; margin-top: 4px; }
+  .btn-add-plot:hover { background: var(--green-pale); border-color: var(--green-dark); color: var(--green-dark); }
+  .inline-extra { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .inline-extra label { font-size: 0.88rem; color: var(--text-mid); white-space: nowrap; }
+  .inline-extra input { flex: 1; }
+
+  /* GPS Button */
+  .gps-row { display: flex; gap: 10px; align-items: flex-start; }
+  .gps-row .coords { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; }
+  .btn-gps { background: linear-gradient(135deg, #1976d2, #42a5f5); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-family: 'Sarabun', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.18s; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .btn-gps:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(25,118,210,0.35); }
+  .btn-gps:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+  .map-preview { width: 100%; height: 200px; border-radius: 10px; border: 1.5px solid var(--border); margin-top: 12px; display: none; }
+
+  /* Submit */
+  .submit-wrap { text-align: center; padding-top: 8px; }
+  .btn-submit { background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-light) 100%); color: white; border: none; border-radius: 50px; padding: 16px 56px; font-family: 'Mitr', sans-serif; font-size: 1.05rem; font-weight: 500; cursor: pointer; box-shadow: 0 6px 24px rgba(45,106,53,0.30); transition: all 0.2s; letter-spacing: 0.03em; }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(45,106,53,0.38); }
+  .btn-submit:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px); color: white; padding: 14px 28px; border-radius: 50px; font-size: 0.95rem; box-shadow: 0 8px 32px rgba(0,0,0,0.25); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 9999; pointer-events: none; white-space: nowrap; }
+  .toast.success { background: var(--green-dark); }
+  .toast.error { background: #c62828; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Loading overlay */
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(26,58,31,0.6); z-index: 9998; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width: 52px; height: 52px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: white; font-family: 'Mitr', sans-serif; font-size: 1rem; }
+
+  footer { background: var(--green-dark); color: rgba(255,255,255,0.7); text-align: center; padding: 20px; font-size: 0.82rem; line-height: 1.7; }
+  footer strong { color: var(--gold-light); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">🌿</div>
+    <div class="header-text">
+      <h1>แบบสำรวจการบริหารจัดการแปลงอ้อย</h1>
+      <p>ในพื้นที่ที่ได้รับผลกระทบจากโรคใบขาวอ้อยระบาด</p>
+    </div>
+  </div>
+</header>
+<div class="gold-bar"></div>
+
+<div class="container">
+<form id="surveyForm" onsubmit="handleSubmit(event)">
+
+  <!-- ส่วนที่ 1 -->
+  <div class="section-card">
+    <div class="section-header"><div class="section-num">1</div><div class="section-title">ข้อมูลทั่วไปของผู้ปลูกอ้อย</div></div>
+    <div class="section-body">
+      <div class="input-row">
+        <div class="field-group">
+          <label class="field-label">ชื่อ – สกุล <span class="req">*</span></label>
+          <input type="text" name="fullname" placeholder="ชื่อ นามสกุล" required>
+        </div>
+        <div class="field-group">
+          <label class="field-label">เบอร์มือถือ <span class="req">*</span></label>
+          <input type="tel" name="phone" placeholder="0xx-xxx-xxxx" required>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ที่อยู่ตามทะเบียนบ้าน</label>
+        <div class="input-row"><input type="text" name="house_no" placeholder="บ้านเลขที่"><input type="text" name="moo" placeholder="หมู่ที่"></div>
+        <div class="input-row-3" style="margin-top:10px">
+          <input type="text" name="tambon" placeholder="ตำบล">
+          <input type="text" name="amphoe" placeholder="อำเภอ">
+          <input type="text" name="province" placeholder="จังหวัด">
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="field-group">
+        <label class="field-label">การขึ้นทะเบียนชาวไร่อ้อย</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="reg_farmer" value="no"> ไม่ขึ้นทะเบียน</label>
+          <label class="radio-item"><input type="radio" name="reg_farmer" value="yes"> ขึ้นทะเบียน</label>
+        </div>
+        <div class="inline-extra"><label>เลขที่:</label><input type="text" name="reg_farmer_no" placeholder="เลขที่ทะเบียน"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">การขึ้นทะเบียนเกษตรกรกับสำนักงานเกษตรจังหวัด/อำเภอ</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="reg_agri" value="no"> ไม่ขึ้นทะเบียน</label>
+          <label class="radio-item"><input type="radio" name="reg_agri" value="yes"> ขึ้นทะเบียน</label>
+        </div>
+        <div class="inline-extra"><label>เลขที่:</label><input type="text" name="reg_agri_no" placeholder="เลขที่ทะเบียน"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">เป็นคู่สัญญากับโรงงานน้ำตาล</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="factory_contract" value="no"> ไม่เป็น</label>
+          <label class="radio-item"><input type="radio" name="factory_contract" value="yes"> เป็น</label>
+        </div>
+        <div class="inline-extra"><label>ระบุโรงงาน:</label><input type="text" name="factory_name" placeholder="ชื่อโรงงานน้ำตาล"></div>
+      </div>
+      <div class="input-row">
+        <div class="field-group"><label class="field-label">เขตส่งเสริมที่</label><input type="text" name="zone" placeholder="เขตที่"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">การส่งอ้อยเข้าหีบ</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="delivery" value="yard"> ลานขนถ่ายของโรงงาน</label>
+          <label class="radio-item"><input type="radio" name="delivery" value="direct"> เข้าโรงงานโดยตรง</label>
+          <label class="radio-item"><input type="radio" name="delivery" value="private"> ลานรับซื้อเอกชน</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ส่วนที่ 2 -->
+  <div class="section-card">
+    <div class="section-header"><div class="section-num">2</div><div class="section-title">ข้อมูลเกี่ยวกับพื้นที่ปลูกอ้อย</div></div>
+    <div class="section-body">
+      <div class="input-row">
+        <div class="field-group"><label class="field-label">พื้นที่ปลูกอ้อยรวม (ไร่)</label><input type="number" name="total_area" placeholder="จำนวนไร่" min="0"></div>
+        <div class="field-group"><label class="field-label">จำนวนแปลง</label><input type="number" name="plot_count" placeholder="แปลง" min="1" max="20"></div>
+      </div>
+      <hr class="divider">
+      <div id="plots-container"></div>
+      <button type="button" class="btn-add-plot" onclick="addPlot()">＋ เพิ่มแปลง</button>
+    </div>
+  </div>
+
+  <!-- ส่วนที่ 3 -->
+  <div class="section-card">
+    <div class="section-header"><div class="section-num">3</div><div class="section-title">ความรู้เกี่ยวกับโรคใบขาวอ้อย</div></div>
+    <div class="section-body">
+      <div class="field-group"><label class="field-label">ทราบหรือไม่ว่าโรคใบขาวเกิดจากเชื้อไฟโตพลาสมา?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="know1" value="yes"> ทราบ</label><label class="radio-item"><input type="radio" name="know1" value="no"> ไม่ทราบ</label></div></div>
+      <div class="field-group"><label class="field-label">ทราบหรือไม่ว่าโรคแพร่ระบาดผ่านท่อนพันธุ์และเพลี้ยจักจั่นสีน้ำตาล?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="know2" value="yes"> ทราบ</label><label class="radio-item"><input type="radio" name="know2" value="no"> ไม่ทราบ</label></div></div>
+      <div class="field-group"><label class="field-label">ทราบหรือไม่ว่าโรคทำให้ผลผลิตลดลงถึงร้อยละ 20–30?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="know3" value="yes"> ทราบ</label><label class="radio-item"><input type="radio" name="know3" value="no"> ไม่ทราบ</label></div></div>
+      <div class="field-group"><label class="field-label">ทราบหรือไม่ว่าโรคทำให้ค่าความหวานลดลงประมาณ 3 ซีซีเอส?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="know4" value="yes"> ทราบ</label><label class="radio-item"><input type="radio" name="know4" value="no"> ไม่ทราบ</label></div></div>
+      <div class="field-group">
+        <label class="field-label">อาการที่พบเห็นบ่อยที่สุด</label>
+        <div class="check-group vertical">
+          <label class="check-item"><input type="checkbox" name="symptom" value="white_leaf"> ใบสีขาวโพลนทั้งใบ</label>
+          <label class="check-item"><input type="checkbox" name="symptom" value="stripe"> ใบสีขาวเป็นแถบๆ</label>
+          <label class="check-item"><input type="checkbox" name="symptom" value="bushy"> อ้อยเป็นกอฝอย ลำเล็ก แตกข้าง</label>
+          <label class="check-item"><input type="checkbox" name="symptom" value="dead"> อ้อยตายยกกอ</label>
+        </div>
+        <div class="inline-extra"><label>อื่นๆ:</label><input type="text" name="symptom_other" placeholder="ระบุอาการอื่น"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ส่วนที่ 4 -->
+  <div class="section-card">
+    <div class="section-header"><div class="section-num">4</div><div class="section-title">การจัดการและการป้องกันโรคใบขาวอ้อย</div></div>
+    <div class="section-body">
+      <div class="field-group">
+        <label class="field-label">แปลงที่เกิดโรคเกิดจาก</label>
+        <div class="radio-group"><label class="radio-item"><input type="radio" name="disease_from" value="new"> อ้อยปลูก</label><label class="radio-item"><input type="radio" name="disease_from" value="ratoon"> อ้อยไว้ตอ</label></div>
+        <div style="margin-top:10px"><label class="field-label" style="margin-bottom:6px">เกิดในช่วงตอที่</label><div class="radio-group"><label class="radio-item"><input type="radio" name="disease_ratoon" value="1"> 1</label><label class="radio-item"><input type="radio" name="disease_ratoon" value="2"> 2</label><label class="radio-item"><input type="radio" name="disease_ratoon" value="3"> 3</label><label class="radio-item"><input type="radio" name="disease_ratoon" value="4"> 4</label></div></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">การคัดเลือกท่อนพันธุ์</label>
+        <div class="radio-group vertical">
+          <label class="radio-item"><input type="radio" name="seed_select" value="certified"> ใช้ท่อนพันธุ์จากแหล่งที่เชื่อถือได้/แปลงพันธุ์สะอาด</label>
+          <label class="radio-item"><input type="radio" name="seed_select" value="own"> ใช้ท่อนพันธุ์จากแปลงเดิมของตนเอง (ไม่ได้คัดเลือก)</label>
+          <label class="radio-item"><input type="radio" name="seed_select" value="hot_water"> คัดเลือกโดยการแช่น้ำร้อน (Hot water treatment)</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">เมื่อพบอ้อยเป็นโรค จัดการอย่างไร?</label>
+        <div class="radio-group vertical">
+          <label class="radio-item"><input type="radio" name="manage" value="destroy"> ถอนออก/ขุดทำลายทันที</label>
+          <label class="radio-item"><input type="radio" name="manage" value="leave"> ปล่อยไว้จนเก็บเกี่ยว</label>
+          <label class="radio-item"><input type="radio" name="manage" value="partial"> ตัดทิ้งบางส่วน</label>
+        </div>
+        <div class="inline-extra"><label>วิธีการทำลาย:</label><input type="text" name="manage_method" placeholder="ระบุวิธี"></div>
+      </div>
+      <div class="field-group"><label class="field-label">วิธีการเก็บเกี่ยว</label><div class="radio-group"><label class="radio-item"><input type="radio" name="harvest" value="machine"> ใช้รถตัดอ้อย</label><label class="radio-item"><input type="radio" name="harvest" value="burn"> เผาอ้อยก่อนเก็บเกี่ยว</label></div></div>
+      <div class="field-group">
+        <label class="field-label">มีการกำจัดพาหะ (เพลี้ยจักจั่นสีน้ำตาล) หรือไม่?</label>
+        <div class="radio-group"><label class="radio-item"><input type="radio" name="pest_control" value="yes"> ทำ</label><label class="radio-item"><input type="radio" name="pest_control" value="no"> ไม่ทำ</label></div>
+        <div class="inline-extra"><label>วิธีการ:</label><input type="text" name="pest_method" placeholder="ระบุวิธี"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ในฤดูการผลิตถัดไปดำเนินการอย่างไร?</label>
+        <div class="check-group vertical">
+          <label class="check-item"><input type="checkbox" name="next_plan" value="rest"> พักแปลง</label>
+          <label class="check-item"><input type="checkbox" name="next_plan" value="other_crop"> ปลูกพืชอื่น</label>
+          <label class="check-item"><input type="checkbox" name="next_plan" value="no_plant"> ไม่ปลูก</label>
+          <label class="check-item"><input type="checkbox" name="next_plan" value="continue"> ปลูกต่อทันที</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">มีการบำรุงดินหรือไม่?</label>
+        <div class="radio-group"><label class="radio-item"><input type="radio" name="soil_care" value="yes"> มี</label><label class="radio-item"><input type="radio" name="soil_care" value="no"> ไม่มี</label></div>
+        <div class="inline-extra"><label>วิธีการ:</label><input type="text" name="soil_method" placeholder="ระบุวิธีบำรุงดิน"></div>
+      </div>
+      <div class="field-group"><label class="field-label">เคยใช้บริการตรวจโรคใบขาวในแปลงอ้อยหรือไม่?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="check_service" value="yes"> เคย</label><label class="radio-item"><input type="radio" name="check_service" value="no"> ไม่เคย</label></div></div>
+      <div class="field-group"><label class="field-label">ในรอบปีที่ผ่านมา พบโรคใบขาวมากน้อยเพียงใด?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="disease_level" value="none"> ไม่พบ</label><label class="radio-item"><input type="radio" name="disease_level" value="low"> พบเล็กน้อย</label><label class="radio-item"><input type="radio" name="disease_level" value="mid"> พบปานกลาง</label><label class="radio-item"><input type="radio" name="disease_level" value="high"> พบมาก</label></div></div>
+      <div class="field-group"><label class="field-label">เคยนำดินไปตรวจวิเคราะห์ที่ศูนย์ส่งเสริมอุตสาหกรรมอ้อยฯ ภาคที่ 4 หรือไม่?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="soil_test" value="yes"> เคย</label><label class="radio-item"><input type="radio" name="soil_test" value="no"> ไม่เคย</label></div></div>
+    </div>
+  </div>
+
+  <!-- ส่วนที่ 5 -->
+  <div class="section-card">
+    <div class="section-header"><div class="section-num">5</div><div class="section-title">ความต้องการความช่วยเหลือจากหน่วยงานรัฐ/โรงงานน้ำตาล</div></div>
+    <div class="section-body">
+      <div class="field-group"><label class="field-label">ต้องการให้จังหวัดประกาศเป็นพื้นที่ประสบภัยพิบัติโรคใบขาวอ้อยหรือไม่?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="disaster_declare" value="yes"> ต้องการ</label><label class="radio-item"><input type="radio" name="disaster_declare" value="no"> ไม่ต้องการ</label></div></div>
+      <div class="field-group">
+        <label class="field-label">ยินดีให้ความร่วมมือจดทะเบียนเกษตรกรจากสำนักงานเกษตรจังหวัด/อำเภอหรือไม่?</label>
+        <div class="radio-group"><label class="radio-item"><input type="radio" name="cooperate_reg" value="yes"> ให้ความร่วมมือ</label><label class="radio-item"><input type="radio" name="cooperate_reg" value="no"> ไม่ให้ความร่วมมือ</label></div>
+        <div class="inline-extra"><label>เหตุผล:</label><input type="text" name="cooperate_reason" placeholder="ระบุเหตุผล"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ต้องการองค์ความรู้เรื่องใดเพิ่มเติม?</label>
+        <div class="radio-group"><label class="radio-item"><input type="radio" name="need_knowledge" value="no"> ไม่ต้องการเพิ่มเติม</label><label class="radio-item"><input type="radio" name="need_knowledge" value="yes"> ต้องการเพิ่มเติม</label></div>
+        <div class="inline-extra"><label>ระบุ:</label><input type="text" name="knowledge_detail" placeholder="องค์ความรู้ที่ต้องการ"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ต้องการสนับสนุนด้านใดเป็นพิเศษ</label>
+        <div class="check-group vertical">
+          <label class="check-item"><input type="checkbox" name="support" value="clean_seed"> พันธุ์อ้อยสะอาด</label>
+          <label class="check-item"><input type="checkbox" name="support" value="destroy_method"> วิธีการทำลายต้นเป็นโรค</label>
+          <label class="check-item"><input type="checkbox" name="support" value="plot_care"> วิธีการบำรุงรักษาแปลงที่เกิดโรคใบขาว</label>
+        </div>
+      </div>
+      <div class="field-group"><label class="field-label">ยินดีให้ความร่วมมือหรือสนับสนุนค่าใช้จ่ายเมื่อผู้เชี่ยวชาญลงพื้นที่หรือไม่?</label><div class="radio-group vertical"><label class="radio-item"><input type="radio" name="expert_cooperate" value="no"> ไม่ยินดีให้ความร่วมมือและสนับสนุนค่าใช้จ่าย</label><label class="radio-item"><input type="radio" name="expert_cooperate" value="yes"> ยินดีให้ความร่วมมือและสนับสนุนค่าใช้จ่าย</label></div></div>
+      <div class="field-group"><label class="field-label">ความต้องการอื่นๆ</label><textarea name="other_needs" placeholder="ระบุความต้องการอื่นๆ ที่ต้องการขอความช่วยเหลือ"></textarea></div>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <button type="submit" class="btn-submit" id="submitBtn">📋 ส่งแบบสำรวจ</button>
+  </div>
+
+</form>
+</div>
+
+<footer>
+  <strong>ศูนย์ส่งเสริมอุตสาหกรรมอ้อยและน้ำตาลทราย ภาคที่ 4</strong><br>
+  ตำบลปะโค อำเภอกุมภวาปี จังหวัดอุดรธานี<br>
+  ผู้อำนวยการ: นายไพรัตน์ ช่วยบำรุง &nbsp;|&nbsp; โทร. 086-397-2368
+</footer>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading"><div class="spinner"></div><div class="loading-text">กำลังบันทึกข้อมูล...</div></div>
+
+<script>
+// ============ SUPABASE CONFIG ============
+const SUPABASE_URL = 'https://eqswxsbpzuhxgftmfrfk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxc3d4c2JwenVoeGdmdG1mcmZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMzE2NjksImV4cCI6MjA4ODYwNzY2OX0.oFbLd-YBY6d3eVYHylfOJv1jAILAYKEZ-KVSvYRyneE';
+
+// ============ PLOTS ============
+let plotCount = 0;
+const plotMaps = {};
+
+function addPlot() {
+  plotCount++;
+  const n = plotCount;
+  const container = document.getElementById('plots-container');
+  const div = document.createElement('div');
+  div.className = 'plot-card';
+  div.id = `plot-${n}`;
+  div.innerHTML = `
+    <div class="plot-title">🌱 <span class="plot-badge">แปลงที่ ${n}</span>
+      ${n > 1 ? `<button type="button" onclick="removePlot(${n})" style="margin-left:auto;background:none;border:none;color:#c05050;font-size:1.1rem;cursor:pointer;">✕</button>` : ''}
+    </div>
+    <div class="input-row-3">
+      <input type="text" name="plot${n}_moo" placeholder="หมู่ที่">
+      <input type="text" name="plot${n}_tambon" placeholder="ตำบล">
+      <input type="text" name="plot${n}_amphoe" placeholder="อำเภอ">
+    </div>
+    <div class="field-group" style="margin-top:14px">
+      <label class="field-label">📍 พิกัด GPS</label>
+      <div class="gps-row">
+        <div class="coords">
+          <input type="number" step="any" id="lng${n}" name="plot${n}_lng" placeholder="Longitude">
+          <input type="number" step="any" id="lat${n}" name="plot${n}_lat" placeholder="Latitude">
+        </div>
+        <button type="button" class="btn-gps" onclick="getGPS(${n})">📡 ระบุตำแหน่ง</button>
+      </div>
+      <div id="map${n}" class="map-preview"></div>
+    </div>
+    <div class="field-group" style="margin-top:10px">
+      <label class="field-label">เอกสารสิทธิ์</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="plot${n}_doc" value="chanod"> โฉนด</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_doc" value="ns3k"> นส.3ก</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_doc" value="bpbt"> ภบท.5</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_doc" value="none"> ไม่มีเอกสาร</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_doc" value="other"> อื่นๆ</label>
+      </div>
+    </div>
+    <div class="input-row" style="margin-top:10px">
+      <div class="field-group">
+        <label class="field-label">พันธุ์ที่ปลูกหลัก</label>
+        <input type="text" name="plot${n}_variety" placeholder="เช่น ขอนแก่น 3, CSB 144">
+      </div>
+      <div class="field-group">
+        <label class="field-label">ผลผลิต (ตัน/ไร่)</label>
+        <input type="number" name="plot${n}_yield" placeholder="ตัน/ไร่" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:10px">
+      <label class="field-label">ลักษณะการปลูก</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="plot${n}_type" value="new"> อ้อยปลูก</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_type" value="ratoon"> อ้อยตอ</label>
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:10px">
+      <label class="field-label">จำนวนตอ (กรณีอ้อยตอ)</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="plot${n}_ratoon" value="1"> 1 ตอ</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_ratoon" value="2"> 2 ตอ</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_ratoon" value="3"> 3 ตอ</label>
+        <label class="radio-item"><input type="radio" name="plot${n}_ratoon" value="4"> 4 ตอ</label>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+  if (n > 1) div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function removePlot(n) {
+  const el = document.getElementById(`plot-${n}`);
+  if (el) { el.remove(); if (plotMaps[n]) { delete plotMaps[n]; } }
+}
+
+// ============ GPS ============
+function getGPS(n) {
+  const btn = document.querySelector(`#plot-${n} .btn-gps`);
+  if (!navigator.geolocation) { showToast('เบราว์เซอร์นี้ไม่รองรับ GPS', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังระบุ...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(7);
+      const lng = pos.coords.longitude.toFixed(7);
+      document.getElementById(`lat${n}`).value = lat;
+      document.getElementById(`lng${n}`).value = lng;
+      btn.disabled = false;
+      btn.innerHTML = '✅ ระบุแล้ว';
+      showMapPreview(n, parseFloat(lat), parseFloat(lng));
+    },
+    err => {
+      btn.disabled = false;
+      btn.innerHTML = '📡 ระบุตำแหน่ง';
+      showToast('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึง GPS', 'error');
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+function showMapPreview(n, lat, lng) {
+  const mapEl = document.getElementById(`map${n}`);
+  mapEl.style.display = 'block';
+  if (plotMaps[n]) {
+    plotMaps[n].setView([lat, lng], 15);
+    plotMaps[n]._marker.setLatLng([lat, lng]);
+  } else {
+    setTimeout(() => {
+      const map = L.map(`map${n}`).setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      const marker = L.marker([lat, lng]).addTo(map)
+        .bindPopup(`📍 แปลงที่ ${n}<br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
+      map._marker = marker;
+      plotMaps[n] = map;
+    }, 100);
+  }
+}
+
+// ============ COLLECT FORM DATA ============
+function collectFormData() {
+  const fd = new FormData(document.getElementById('surveyForm'));
+  const data = {};
+  for (const [key, value] of fd.entries()) {
+    if (data[key]) {
+      if (!Array.isArray(data[key])) data[key] = [data[key]];
+      data[key].push(value);
+    } else {
+      data[key] = value;
+    }
+  }
+  // Collect plots
+  const plots = [];
+  for (let i = 1; i <= plotCount; i++) {
+    if (document.getElementById(`plot-${i}`)) {
+      plots.push({
+        moo: data[`plot${i}_moo`] || '',
+        tambon: data[`plot${i}_tambon`] || '',
+        amphoe: data[`plot${i}_amphoe`] || '',
+        longitude: data[`plot${i}_lng`] || null,
+        latitude: data[`plot${i}_lat`] || null,
+        doc: data[`plot${i}_doc`] || '',
+        variety: data[`plot${i}_variety`] || '',
+        yield_per_rai: data[`plot${i}_yield`] || null,
+        plant_type: data[`plot${i}_type`] || '',
+        ratoon_no: data[`plot${i}_ratoon`] || '',
+      });
+    }
+  }
+  data.plots = plots;
+  return data;
+}
+
+// ============ SUBMIT ============
+async function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const loading = document.getElementById('loading');
+
+  const formData = collectFormData();
+
+  const payload = {
+    fullname: formData.fullname || '',
+    phone: formData.phone || '',
+    province: formData.province || '',
+    data: formData
+  };
+
+  btn.disabled = true;
+  loading.classList.add('show');
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/surveys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    loading.classList.remove('show');
+
+    if (res.ok || res.status === 201) {
+      showToast('✅ ส่งแบบสำรวจเรียบร้อยแล้ว ขอบคุณสำหรับความร่วมมือ', 'success');
+      setTimeout(() => { document.getElementById('surveyForm').reset(); plotCount = 0; document.getElementById('plots-container').innerHTML = ''; addPlot(); }, 2500);
+    } else {
+      const err = await res.text();
+      console.error(err);
+      showToast('❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+      btn.disabled = false;
+    }
+  } catch (err) {
+    loading.classList.remove('show');
+    console.error(err);
+    showToast('❌ ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต', 'error');
+    btn.disabled = false;
+  }
+}
+
+// ============ TOAST ============
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 4500);
+}
+
+// Init first plot
+addPlot();
+</script>
+</body>
+</html>
